@@ -1,0 +1,20 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "student": [
+    {
+      "name": "Jane",
+      "sex": "f",
+      "code": 1,
+      "group": 1,
+      "weight": 1.0
+    },
+    {
+      "name": "John",
+      "sex": "m",
+      "code": 2,
+      "group": 1,
+      "weight": 1.0
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 """
 与花名册相关的代码，程序核心代码之一
 """
+import json
 from typing import Literal
 import pandas as pd
-import sqlite3 as sq
+from loguru import logger
 
 class Student:
     """
@@ -19,14 +20,22 @@ class Student:
         self.sex: Literal['m', 'f'] = sex
         self.code: int = code
         self.group: int = group
+
 class Roster:
     """
     花名册类，用于执行花名册相关代码操作
     """
-    def __init__(self, students: list[Student] = []):
+    def __init__(self, name: str, students = None):
+        self.name: str = name
+        if students is None:
+            students=[]
         self.__students: list[Student] = students
-        self.__temp: list[Student] = []
-        self.load_by_sql()
+        self.__weight: list[int] = [0] * len(students)
+        logger.info(f"已创建Roster：{name}")
+        self.file = open(f"data/main/roster/{self.name}.json", "w+", encoding="utf-8")
+        self.roster_dict: dict = {}
+        self.load_roster()
+
     def add_student(self, student: Student) -> None:
         """
         添加学生信息
@@ -35,12 +44,28 @@ class Roster:
         """
         if student not in self.__students:
             self.__students.append(student)
+            self.__weight.append(0)
+            logger.info(f"已添加Student：{student.name}")
+
+    def remove_student(self, student: Student) -> None:
+        """
+        删除学生信息
+        :param student: 学生信息
+        :return: None
+        """
+        if student in self.__students:
+            del self.__weight[self.__students.index(student)]
+            self.__students.remove(student)
+            logger.info(f"已删除Student：{student.name}")
+
     @property
     def origin_len(self) -> int:
+        """
+        获取原始学生数量
+        :return: 原始学生数量
+        """
         return len(self.__students)
-    @property
-    def temp_len(self) -> int:
-        return len(self.__temp)
+
     def init_by_xlsx(self, path: str) -> None | Exception:
         """
         通过xlsx文件初始化花名册数据
@@ -55,6 +80,7 @@ class Roster:
                 dtype={ "姓名": str, "性别": Literal['m', 'f'],
                         "学号": int, "分组": int }
             )
+            logger.info(f"已读取Excel文件：{path}")
             for index, row in roster_excel.iterrows():
                 student = Student(
                     row["姓名"],
@@ -64,45 +90,33 @@ class Roster:
                 )
                 if student not in self.__students:
                     self.__students.append(student)
+            logger.info(f"已初始化Roster：{self.__students}")
             return None
         except Exception as e:
             return e
+
     def write_origin_to_xlsx(self): ...
-    def standard_pick(self, index: int) -> Student:
+
+    def load_roster(self):
         """
-        返回__student中index对应的学生信息
-        :param index: 列表索引
-        :return: 学生信息
+        加载花名册数据
+        :return: 无返回值
         """
-        return self.__students[index]
-    def unrepeated_pick(self, index: int) -> Student:
-        """
-        返回__temp中index对应的学生信息，并在列表中删除该元素，若所有元素被删除则重置列表
-        :param index: 列表索引
-        :return: 学生信息
-        """
-        val = self.__temp.pop(index)
-        if not self.__temp:
-            self.__temp = self.__students
-        return val
-    def is_member_of(self, index: int, group: int) -> bool:
-        """
-        判断__student中索引为index的学生是否属于小组group
-        :param index: 列表索引
-        :param group: 小组编号
-        :return: 布尔值
-        """
-        if self.standard_pick(index).group == group:
-            return True
-        return False
-    def all_member_of(self, group: int) -> list[Student]:
-        """
-        返回所有小组为group的学生列表
-        :param group: 小组编号
-        :return: 学生列表
-        """
-        val = []
-        for student in self.__students:
-            if student.group == group:
-                val.append(student)
-        return val
+        self.roster_dict = json.load(self.file)
+        logger.info(f"已加载Roster-json文件：{self.name}")
+        for student in self.roster_dict["student"]:
+            self.add_student(Student(
+                student["name"],
+                student["sex"],
+                student["code"],
+                student["group"]
+            ))
+            self.__weight[self.__students.index(Student(
+                student["name"],
+                student["sex"],
+                student["code"],
+                student["group"]
+            ))] = student["weight"]
+        logger.info(f"已初始化Roster：{self.name}")
+
+    def update_weight(self): ...
