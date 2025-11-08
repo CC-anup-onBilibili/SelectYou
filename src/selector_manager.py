@@ -2,8 +2,21 @@
 抽选器管理器，用于安装、配置和调用内置、插件市场下载和用户自行安装的抽选器，程序核心代码之一
 """
 import os
+import attrs
 
-selectors: list[dict] = []
+@attrs.define(frozen=True)
+class AbstractSelector:
+    """
+    抽象抽选器，用于存取各个抽选器的基本信息
+    """
+    name: str
+    description: str
+    author: str
+    version: str
+    icon: str
+
+
+selectors: list[AbstractSelector] = []
 
 def scan_selectors():
     """

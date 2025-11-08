@@ -6,7 +6,7 @@ def init():
     app = QtWidgets.QApplication([])
     window = src.master_window.MainWindow()
     window.show()
-    app.exec_()
+    app.exec()
 
 if __name__ == '__main__':
     init()
