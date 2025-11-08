@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtGui, QtCore
 import qfluentwidgets as fluent
 import qfluentwidgets.common.icon as icon
+import selector_manager
 
 master = None
 
@@ -27,3 +28,5 @@ class MainWindow(fluent.FluentWindow):
         self.page = Page()
         self.page.setObjectName("测试页面")
         self.addSubInterface(self.page, icon.FluentIcon.ADD, "测试页面")
+
+        # TODO: 完善页面管理逻辑
