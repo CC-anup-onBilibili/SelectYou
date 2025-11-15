@@ -35,6 +35,7 @@ def scan_selectors():
     if not os.path.exists(selectors_dir):
         return
     for name in os.listdir(selectors_dir):
+        logger.info(f"扫描到抽选器：{name}")
         # 检查是否为合法的Python模块目录
         module_path = os.path.join(selectors_dir, name)
         if (os.path.isdir(module_path) and
@@ -55,7 +56,7 @@ def scan_selectors():
                 abstract_selectors.append(selector)
                 selector_modules[selector.name] = importlib.reload(module)
             except Exception as e:
-                logger.error(f"Failed to load selector {name}: {e}")
+                logger.error(f"安装抽选器失败 {name}: {e}")
                 continue
 
 def download_selector(id: int):

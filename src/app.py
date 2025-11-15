@@ -1,10 +1,10 @@
 from PySide6 import QtWidgets
 
-import src.master_window
+import interface.master_window
 
 def init():
     app = QtWidgets.QApplication([])
-    window = src.master_window.MainWindow()
+    window = interface.master_window.MainWindow()
     window.show()
     app.exec()
 

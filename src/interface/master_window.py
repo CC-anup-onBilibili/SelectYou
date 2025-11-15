@@ -2,6 +2,7 @@ from PySide6 import QtWidgets, QtGui, QtCore
 import qfluentwidgets as fluent
 import qfluentwidgets.common.icon as icon
 import selector_manager
+from loguru import logger
 
 master = None
 
