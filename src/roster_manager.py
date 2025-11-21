@@ -1,18 +1,20 @@
 """
 与花名册相关的代码，程序核心代码之一
 """
+import functools
 import random
 from typing import Literal
 import pandas as pd
 from loguru import logger
 from queue import Queue
 import sqlite3
+import datetime
 
 class Student:
     """
     学生类，用于保存学生信息
     """
-    def __init__(self, name: str, sex: Literal['m', 'f'], code: int, group: int,
+    def __init__(self, name: str, sex: Literal['男', '女'], code: int, group: int,
                  selected_times: int = 0, custom_weight: float = 1.0, weight: float = 1.0):
         self.name = name
         self.sex = sex
@@ -21,19 +23,36 @@ class Student:
         self.selected_times = selected_times
         self.weight = weight
         self.custom_weight = custom_weight
+        logger.info(f"已初始化Student：{name}")
 
+    def __eq__(self, other: Student):
+        """
+        根据学号、姓名、性别和所属小组判断两个学生是否相等
+        :param other: 其他学生
+        :return: 是否相等
+        """
+        res: bool = self.code == other.code and self.name == other.name and self.sex == other.sex and self.code == other.code and self.group == other.group
+        logger.info(f"比较学生：{self.name}，{other.name}，结果为：{res}")
+        return res
+
+class History:
+    """
+    历史记录类，用于存取抽选历史记录
+    """
+    def __init__(self, selected: list[Student], time: datetime.datetime = datetime.datetime.now()):
+        self.selected = selected
+        self.time = time
+        logger.info(f"已初始化History：{time}")
 
 class Roster:
     """
     花名册类，用于执行花名册相关代码操作
     """
-    def __init__(self, name: str, students = None):
-        self.name: str = name # 花名册名称，字符串类型
-        if students is None:
-            students=[]
-        self.__students: list[Student] = students # 学生列表，元素为Student类型
+    def __init__(self, name: str, students = [], history = []):
+        self.name: str = name
+        self.__students: list[Student] = students
+        self.__history: list[History] = history
         logger.info(f"已创建Roster：{name}")
-        self.handle_queue: Queue = Queue()
         self.weight_updater_mode: Literal['undefined', 'fp', 'fu', 'up', 'uu'] = 'undefined'
 
     def add_student(self, student: Student) -> None:
@@ -47,16 +66,25 @@ class Roster:
             self.__weight.append(0)
             logger.info(f"已添加Student：{student.name}")
 
-    def remove_student(self, student: Student) -> None:
+    def remove_student(self, param: tuple[Literal['name', 'code'], str | int]) -> None:
         """
         删除学生信息
-        :param student: 学生信息
+        :param param: 学生信息
         :return: None
         """
-        if student in self.__students:
-            del self.__weight[self.__students.index(student)]
-            self.__students.remove(student)
-            logger.info(f"已删除Student：{student.name}")
+        try:
+            if param[0] == 'name' and type(param[1]) == int:
+                raise TypeError("期望的信息类型为姓名，但实际为int类型。")
+            if param[0] == 'code' and type(param[1]) == str:
+                raise TypeError("期望的信息类型为学号，但实际为str类型。")
+            for student in self.__students:
+                if student.name == param[1] or student.code == param[1]:
+                    self.__students.remove(student)
+                    logger.info(f"已删除Student：{student.name}")
+                    return
+            logger.warning(f"未找到学生：{param[1]}")
+        except Exception as e:
+            logger.error(e)
 
     @property
     def origin_len(self) -> int:
@@ -78,8 +106,9 @@ class Roster:
                 path,
                 sheet_name="Sheet1",
                 header=0,
-                dtype={ "姓名": str, "性别": Literal['m', 'f'],
-                        "学号": int, "分组": int }
+                dtype={ "姓名": str, "性别": str,
+                        "学号": int, "分组": int },
+                engine="openpyxl"
             )
             logger.info(f"已读取Excel文件：{path}")
             for index, row in roster_excel.iterrows():
@@ -88,7 +117,7 @@ class Roster:
                 if student not in self.__students:
                     self.__students.append(student)
                     logger.info(f"已添加Student：{student.name}")
-            logger.info(f"已初始化Roster：{self.__students}")
+            logger.info(f"已初始化Roster：{self.name}")
             return None
         except Exception as e:
             logger.error(f"初始化Roster失败：{e}")
@@ -99,7 +128,7 @@ class Roster:
     def set_weight_updater_mode(self, mode: Literal['undefined', 'fp', 'fu', 'up', 'uu']) -> None:
         """
         设置权重更新模式， 为undefined则纯随机抽选
-        :param mode: 权重更新模式， 包括公平/不公平，可预测/不可预测共四种模式
+        :param mode: 权重更新模式， 包括公平/不公平，可预测/不可预测以及纯随机共五种模式
         :return: 无返回值
         """
         self.weight_updater_mode = mode
@@ -179,3 +208,48 @@ class Roster:
             case 'uu':
                 logger.info("权重更新模式为uu，将使用非公平不可预测权重更新")
                 self._unfair_unpredicted_updater()
+        for student in self.__students:
+            student.weight = 1.0
+            logger.info(f"已重置Student：{student.name} 权重")
+
+    def add_history(self, students: list[Student]):
+        """
+        添加历史记录
+        :param students: 学生列表
+        :return: 无返回值
+        """
+        h = History(students)
+        self.__history.append(h)
+        logger.info(f"已添加历史记录：{h.selected}")
+
+    def reset_weight_history(self):
+        """
+        重置所有学生的抽选次数
+        :return: 无返回值
+        """
+        for student in self.__students:
+            student.selected_times = 0
+            logger.info(f"已重置Student：{student.name} 抽选次数")
+            student.weight = 1.0
+            logger.info(f"已重置Student：{student.name} 权重")
+        self.__history = []
+        logger.info("已重置历史记录")
+
+def picker(func: function, roster: Roster):
+    """
+    抽选期装饰器，用于定义抽选器，并简化抽选器编写过程
+    :param func: 抽选器函数
+    :param roster: 对应的花名册，应与抽选器的花名册参数相同
+    :return: 返回抽选结果
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        res: list[Student] = func(*args, **kwargs)
+        roster.add_history(res)
+        for student in res:
+            student.selected_times += 1
+            logger.info(f"已更新Student：{student.name} 抽选次数")
+        roster.update_weight()
+        logger.info("已更新权重")
+        return res
+    return wrapper

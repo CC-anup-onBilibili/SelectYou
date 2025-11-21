@@ -31,8 +31,9 @@ def scan_selectors():
     """
     global abstract_selectors
     abstract_selectors.clear()  # 清空之前的扫描结果
-    selectors_dir = "abstract_selectors"
+    selectors_dir = "selectors"
     if not os.path.exists(selectors_dir):
+        logger.warning(f"抽选器目录不存在：{selectors_dir}")
         return
     for name in os.listdir(selectors_dir):
         logger.info(f"扫描到抽选器：{name}")
