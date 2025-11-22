@@ -1,6 +1,7 @@
 """
 与花名册相关的代码，程序核心代码之一
 """
+import json
 import random
 from typing import Literal
 import pandas as pd
@@ -11,9 +12,11 @@ class Student:
     """
     学生类，用于保存学生信息
     """
-    def __init__(self, name: str, sex: Literal['男', '女'], code: int, group: int,
+    def __init__(self, name: str, sex: str, code: int, group: str,
                  selected_times: int = 0, custom_weight: float = 1.0, weight: float = 1.0):
         self.name = name
+        if sex not in ['男', '女']:
+            raise ValueError("性别字段应填写“男”或“女”，否则会发生不可预料的错误")
         self.sex = sex
         self.code = code
         self.group = group
@@ -45,12 +48,32 @@ class Roster:
     """
     花名册类，用于执行花名册相关代码操作
     """
-    def __init__(self, name: str, students = [], history = []):
+    def __init__(self, name: str, students = None, history = None):
+        # 初始化名称
         self.name: str = name
+        self.file_name: str = f"{name}.json"
+
+        #Roster创建时版本
+        self.version: str = "1.0.0"
+
+        # 核心数据
+        if students is None:
+            students = []
+        if history is None:
+            history = []
         self.students: list[Student] = students
+        self.groups: list[str] = []
         self.history: list[History] = history
+
+        # 权重更新设置
+        self.weight_updater_mode: Literal['disabled', 'enabled'] = 'disabled'
+        self.weight_updater_coef: list = [1.5, 3]
+
+        # 加载花名册
+        self.load_by_json()
+
+        # 打日志
         logger.info(f"已创建Roster：{name}")
-        self.weight_updater_mode: Literal['undefined', 'fp', 'fu', 'up', 'uu'] = 'undefined'
 
     def add_student(self, student: Student) -> None:
         """
@@ -58,9 +81,13 @@ class Roster:
         :param student: 学生信息
         :return: None
         """
-        if student not in self.students:
-            self.students.append(student)
-            logger.info(f"已添加Student：{student.name}")
+        try:
+            if student not in self.students:
+                self.students.append(student)
+                logger.info(f"已添加Student：{student.name}")
+        except ValueError as e:
+            logger.error(f"{e}")
+            return None
 
     def remove_student(self, param: tuple[Literal['name', 'code'], str | int]) -> None:
         """
@@ -79,8 +106,8 @@ class Roster:
                     logger.info(f"已删除Student：{student.name}")
                     return
             logger.warning(f"未找到学生：{param[1]}")
-        except Exception as e:
-            logger.error(e)
+        except TypeError as e:
+            logger.error(f"{e}")
 
     @property
     def origin_len(self) -> int:
@@ -90,6 +117,13 @@ class Roster:
         """
         logger.info(f"已获取学生数量：{len(self.students)}")
         return len(self.students)
+
+    def set_group(self):
+        for student in self.students:
+            if student.group not in self.groups:
+                self.groups.append(student.group)
+                logger.info(f"已添加小组：{student.group}")
+        logger.info(f"已完成小组设置")
 
     def init_by_xlsx(self, path: str) -> None | Exception:
         """
@@ -104,23 +138,109 @@ class Roster:
                 sheet_name="Sheet1",
                 header=0,
                 dtype={ "姓名": str, "性别": str,
-                        "学号": int, "分组": int },
+                        "学号": int, "分组": str },  # 修改分组类型为str以适应可能的非数字分组
                 engine="openpyxl"
             )
             logger.info(f"已读取Excel文件：{path}")
+            
+            # 检查必要的列是否存在
+            required_columns = ["姓名", "性别", "学号", "分组"]
+            missing_columns = [col for col in required_columns if col not in roster_excel.columns]
+            if missing_columns:
+                raise ValueError(f"Excel文件缺少必要的列: {missing_columns}")
+            
             for index, row in roster_excel.iterrows():
-                student = Student(row["姓名"], row["性别"], row["学号"], row["分组"])
-                logger.info(f"找到学生：{row["姓名"]}-{row["性别"]}-{row["学号"]}-{row["分组"]}")
+                # 检查必要字段是否存在空值
+                if pd.isna(row["姓名"]) or pd.isna(row["性别"]) or pd.isna(row["学号"]) or pd.isna(row["分组"]):
+                    logger.warning(f"第{index+1}行存在空值，跳过该行数据")
+                    continue
+                
+                # 验证性别字段有效性
+                if row["性别"] not in ['男', '女']:
+                    logger.warning(f"第{index+1}行性别字段无效({row['性别']})，跳过该行数据")
+                    continue
+                    
+                student = Student(
+                    str(row["姓名"]).strip(), 
+                    str(row["性别"]).strip(), 
+                    int(row["学号"]), 
+                    str(row["分组"]).strip()
+                )
+                logger.info(f"找到学生：{row['姓名']}-{row['性别']}-{row['学号']}-{row['分组']}")
                 if student not in self.students:
                     self.students.append(student)
                     logger.info(f"已添加Student：{student.name}")
+                    
+            self.set_group()
             logger.info(f"已初始化Roster：{self.name}")
             return None
+            
+        except FileNotFoundError:
+            error_msg = f"找不到Excel文件: {path}"
+            logger.error(error_msg)
+            return FileNotFoundError(error_msg)
+        except pd.errors.EmptyDataError:
+            error_msg = "Excel文件为空或没有有效数据"
+            logger.error(error_msg)
+            return ValueError(error_msg)
+        except pd.errors.ParserError:
+            error_msg = "Excel文件解析错误，请检查文件格式"
+            logger.error(error_msg)
+            return ValueError(error_msg)
+        except ValueError as ve:
+            logger.error(f"Excel数据验证失败: {ve}")
+            return ve
         except Exception as e:
             logger.error(f"初始化Roster失败：{e}")
             return e
 
     def write_origin_to_xlsx(self): ...
+
+    def load_by_json(self) -> None | Exception:
+        """
+        加载已有Roster数据
+        :return: 成功无返回值，失败返回失败原因
+        """
+        try:
+            json_content = None
+            with open(f"data/roster/{self.file_name}", "r", encoding = "utf-8") as f:
+                json_content = json.load(f)
+                logger.info(f"已读取Roster存储文件：data/roster/{self.file_name}")
+            self.version = json_content["version"]
+            for student in json_content["students"]:
+                self.add_student(
+                    Student(
+                        student["name"],
+                        student["sex"],
+                        student["code"],
+                        student["group"],
+                        student["selected_times"],
+                        student["custom_weight"],
+                        student["weight"]
+                    )
+                )
+                logger.info(f"已加载Student：{student['name']}")
+            for history in json_content["history"]:
+                self.history.append(
+                    History(
+                        [student["name"] for student in history["selected"]],
+                        datetime.datetime.fromisoformat(history["time"])
+                    )
+                )
+                logger.info(f"已加载History：{history['time']}")
+            self.set_weight_updater_mode(json_content["weight_updater_mode"])
+        except FileNotFoundError:
+            logger.warning(f"未找到Roster存储文件：data/roster/{self.file_name}，将创建新的花名册")
+            return None
+        except KeyError as e:
+            logger.error(f"Roster存储文件缺少必要键：{e}")
+            return e
+        except json.JSONDecodeError as e:
+            logger.error(f"Roster存储文件JSON格式错误：{e}")
+            return e
+        except Exception as e:
+            logger.error(f"加载Roster失败：{e}")
+            return e
 
     def set_weight_updater_mode(self, mode: Literal['undefined', 'fp', 'fu', 'up', 'uu']) -> None:
         """
@@ -130,48 +250,45 @@ class Roster:
         """
         self.weight_updater_mode = mode
         logger.info(f"已设置权重更新模式：{mode}")
-        for student in self.students:
-            student.weight = 1.0
-            logger.info(f"已重置Student：{student.name} 权重")
 
-    def _fair_predictable_updater(self):
-        """
-        公平地、可预测地更新权重
-        :return: 无返回值
-        """
-        all_selected_times = map(lambda s: float(s.selected_times), self.students)
-        average_selected_times = sum(all_selected_times) / float(len(self.students))
-        logger.info(f"平均抽选次数更新完成：{average_selected_times}")
-        for student in self.students:
-            student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0
-            logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
-        logger.info("权重更新完成")
-
-    def _fair_unpredicted_updater(self):
-        """
-        公平地、不可预测地更新权重
-        :return: 无返回值
-        """
-        all_selected_times = map(lambda s: float(s.selected_times), self.students)
-        average_selected_times = sum(all_selected_times) / float(len(self.students))
-        logger.info(f"平均抽选次数更新完成：{average_selected_times}")
-        for student in self.students:
-            student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0 + random.randint(0, 10)
-            logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
-        logger.info("权重更新完成")
-
-    def _unfair_predictable_updater(self):
-        """
-        非公平地、可预测地更新权重
-        :return: 无返回值
-        """
-        all_selected_times = map(lambda s: float(s.selected_times), self.students)
-        average_selected_times = sum(all_selected_times) / float(len(self.students))
-        logger.info(f"平均抽选次数更新完成：{average_selected_times}")
-        for student in self.students:
-            student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0 + student.custom_weight
-            logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
-        logger.info("权重更新完成")
+    # def _fair_predictable_updater(self):
+    #     """
+    #     公平地、可预测地更新权重
+    #     :return: 无返回值
+    #     """
+    #     all_selected_times = map(lambda s: float(s.selected_times), self.students)
+    #     average_selected_times = sum(all_selected_times) / float(len(self.students))
+    #     logger.info(f"平均抽选次数更新完成：{average_selected_times}")
+    #     for student in self.students:
+    #         student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0
+    #         logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
+    #     logger.info("权重更新完成")
+    #
+    # def _fair_unpredicted_updater(self):
+    #     """
+    #     公平地、不可预测地更新权重
+    #     :return: 无返回值
+    #     """
+    #     all_selected_times = map(lambda s: float(s.selected_times), self.students)
+    #     average_selected_times = sum(all_selected_times) / float(len(self.students))
+    #     logger.info(f"平均抽选次数更新完成：{average_selected_times}")
+    #     for student in self.students:
+    #         student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0 + random.randint(0, 10)
+    #         logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
+    #     logger.info("权重更新完成")
+    #
+    # def _unfair_predictable_updater(self):
+    #     """
+    #     非公平地、可预测地更新权重
+    #     :return: 无返回值
+    #     """
+    #     all_selected_times = map(lambda s: float(s.selected_times), self.students)
+    #     average_selected_times = sum(all_selected_times) / float(len(self.students))
+    #     logger.info(f"平均抽选次数更新完成：{average_selected_times}")
+    #     for student in self.students:
+    #         student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0 + student.custom_weight
+    #         logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
+    #     logger.info("权重更新完成")
 
     def _unfair_unpredicted_updater(self):
         """
@@ -182,7 +299,7 @@ class Roster:
         average_selected_times = sum(all_selected_times) / float(len(self.students))
         logger.info(f"平均抽选次数更新完成：{average_selected_times}")
         for student in self.students:
-            student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0 + student.custom_weight + random.randint(0, 10)
+            student.weight = abs(float(student.selected_times) - average_selected_times) * self.weight_updater_coef[0] + student.custom_weight + random.randint(0, int(self.weight_updater_coef[1]))
             logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
         logger.info("权重更新完成")
 
@@ -194,19 +311,19 @@ class Roster:
         logger.info(f"开始匹配权重更新模式")
         match self.weight_updater_mode:
             case 'undefined':
-                logger.info("权重更新模式为undefined，将使用纯随机抽选")
+                logger.info("权重更新模式为undefined，不会更新权重")
                 return
-            case 'fp':
-                logger.info("权重更新模式为fp，将使用公平可预测权重更新")
-                self._fair_predictable_updater()
-            case 'fu':
-                logger.info("权重更新模式为fu，将使用公平不可预测权重更新")
-                self._fair_unpredicted_updater()
-            case 'up':
-                logger.info("权重更新模式为up，将使用非公平可预测权重更新")
-                self._unfair_predictable_updater()
-            case 'uu':
-                logger.info("权重更新模式为uu，将使用非公平不可预测权重更新")
+            # case 'fp':
+            #     logger.info("权重更新模式为fp，将使用公平可预测权重更新")
+            #     self._fair_predictable_updater()
+            # case 'fu':
+            #     logger.info("权重更新模式为fu，将使用公平不可预测权重更新")
+            #     self._fair_unpredicted_updater()
+            # case 'up':
+            #     logger.info("权重更新模式为up，将使用非公平可预测权重更新")
+            #     self._unfair_predictable_updater()
+            case 'enabled':
+                logger.info("权重更新模式为enabled，即将开始更新")
                 self._unfair_unpredicted_updater()
 
     def add_history(self, students: list[Student]):
@@ -258,5 +375,3 @@ class Roster:
         self.update_weight()
         self.add_history(selected)
         return selected
-
-# TODO: 还差一个保存缓存到本地，同时完善并测试功能
