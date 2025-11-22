@@ -109,15 +109,6 @@ class Roster:
         except TypeError as e:
             logger.error(f"{e}")
 
-    @property
-    def origin_len(self) -> int:
-        """
-        获取原始学生数量
-        :return: 原始学生数量
-        """
-        logger.info(f"已获取学生数量：{len(self.students)}")
-        return len(self.students)
-
     def set_group(self):
         for student in self.students:
             if student.group not in self.groups:
@@ -355,23 +346,73 @@ class Roster:
         :param quant: 指定的抽取数量
         :return: 抽取到的学生，在列表里
         """
-        selected: list[Student] = []
-        weights: list[tuple[float, float]] = []
-        sum_of_weights: float = 0.0
-        for i in range(len(self.students)):
-            if i == 0:
-                weights.append((0.0, self.students[i].weight))
-            else:
-                weights.append((weights[i - 1][1], weights[i - 1][1] + self.students[i].weight))
-            sum_of_weights += self.students[i].weight
-        while len(selected) < quant:
-            coef: float = float(random.randint(0, round(sum_of_weights)))+random.random()
-            for i in range(len(weights)):
-                if weights[i][0] < coef <= weights[i][1]:
-                    if self.students[i] not in selected:
-                        selected.append(self.students[i])
-                        self.students[i].selected_times += 1
-                        logger.info(f"已抽取Student：{self.students[i].name}")
-        self.update_weight()
-        self.add_history(selected)
-        return selected
+        try:
+            if quant > len(self.students):
+                raise ValueError(f"指定的抽取人数：{quant}超过了学生数：{len(self.students)}")
+            selected: list[Student] = []
+            weights: list[tuple[float, float]] = []
+            sum_of_weights: float = 0.0
+            for i in range(len(self.students)):
+                if i == 0:
+                    weights.append((0.0, self.students[i].weight))
+                else:
+                    weights.append((weights[i - 1][1], weights[i - 1][1] + self.students[i].weight))
+                sum_of_weights += self.students[i].weight
+            while len(selected) < quant:
+                coef: float = float(random.randint(0, round(sum_of_weights)))+random.random()
+                for i in range(len(weights)):
+                    if weights[i][0] < coef <= weights[i][1]:
+                        if self.students[i] not in selected:
+                            selected.append(self.students[i])
+                            self.students[i].selected_times += 1
+                            logger.info(f"已抽取Student：{self.students[i].name}")
+            self.update_weight()
+            self.add_history(selected)
+            return selected
+        except ValueError as e:
+            logger.error(f"{e}")
+            return e
+        except Exception as e:
+            logger.error(f"{e}")
+            return e
+
+    def select_group(self, quant: int):
+        """
+        随机抽取指定数量的小组，包括其成员
+        :param quant: 指定的抽取数量
+        :return: 抽取到的小组和成员，在字典里
+        """
+        try:
+            if quant > len(self.groups):
+                raise ValueError(f"指定的抽取组数：{quant}超过了总组数：{len(self.groups)}")
+            selected: dict[str, list[Student]] = {}
+            weights: list[tuple[float, float]] = []
+            sum_of_weights: float = 0.0
+            for i in range(len(self.students)):
+                if i == 0:
+                    weights.append((0.0, self.students[i].weight))
+                else:
+                    weights.append((weights[i - 1][1], weights[i - 1][1] + self.students[i].weight))
+                sum_of_weights += self.students[i].weight
+            while len(selected) < quant:
+                coef: float = float(random.randint(0, round(sum_of_weights)))+random.random()
+                for i in range(len(weights)):
+                    if weights[i][0] < coef <= weights[i][1]:
+                        if self.students[i].group not in selected.keys():
+                            for student in self.students:
+                                if student.group == self.students[i].group:
+                                    selected[self.students[i].group] = [student]
+                                    self.students[i].selected_times += 1
+                                    logger.info(f"已抽取Student：{student.name}")
+            self.update_weight()
+            temp = []
+            for group in selected.keys():
+                temp += selected[group]
+            self.add_history(temp)
+            return selected
+        except ValueError as e:
+            logger.error(f"{e}")
+            return e
+        except Exception as e:
+            logger.error(f"{e}")
+            return e
