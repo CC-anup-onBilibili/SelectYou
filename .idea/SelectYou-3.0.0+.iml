@@ -9,6 +9,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="SecRandom" />
+    <orderEntry type="module" module-name="qfluentwidgets-examples" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

@@ -1,6 +1,7 @@
 """
 与花名册相关的代码，程序核心代码之一
 """
+from queue import Queue
 import json
 import random
 from typing import Literal
@@ -134,7 +135,7 @@ class Roster:
             )
             logger.info(f"已读取Excel文件：{path}")
             
-            # 检查必要的列是否存在
+            # 检查所需要的列是否存在
             required_columns = ["姓名", "性别", "学号", "分组"]
             missing_columns = [col for col in required_columns if col not in roster_excel.columns]
             if missing_columns:
@@ -233,7 +234,7 @@ class Roster:
             logger.error(f"加载Roster失败：{e}")
             return e
 
-    def set_weight_updater_mode(self, mode: Literal['undefined', 'fp', 'fu', 'up', 'uu']) -> None:
+    def set_weight_updater_mode(self, mode: Literal['disabled', 'enabled']) -> None:
         """
         设置权重更新模式， 为undefined则纯随机抽选
         :param mode: 权重更新模式， 包括公平/不公平，可预测/不可预测以及纯随机共五种模式
@@ -366,6 +367,7 @@ class Roster:
                             selected.append(self.students[i])
                             self.students[i].selected_times += 1
                             logger.info(f"已抽取Student：{self.students[i].name}")
+                        break
             self.update_weight()
             self.add_history(selected)
             return selected
@@ -404,6 +406,8 @@ class Roster:
                                     selected[self.students[i].group] = [student]
                                     self.students[i].selected_times += 1
                                     logger.info(f"已抽取Student：{student.name}")
+                            logger.info(f"已抽取小组：{self.students[i].group}")
+                            break
             self.update_weight()
             temp = []
             for group in selected.keys():
@@ -416,3 +420,7 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
+
+# TODO: 接下来创建花名册，并让其他模块导入该模块
+
+roster = Roster("")
