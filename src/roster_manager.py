@@ -1,7 +1,6 @@
 """
 与花名册相关的代码，程序核心代码之一
 """
-import os
 import json
 import random
 from typing import Literal
@@ -110,12 +109,16 @@ class Roster:
         except TypeError as e:
             logger.error(f"{e}")
 
-    def set_group(self):
-        for student in self.students:
-            if student.group not in self.groups:
-                self.groups.append(student.group)
-                logger.info(f"已添加小组：{student.group}")
-        logger.info(f"已完成小组设置")
+    def set_group(self, student: Student, group: str):
+        """
+        设置学生分组
+        :param student: 学生信息
+        :param group: 分组名称
+        :return: None
+        """
+        student.group = group
+        logger.info(f"已设置学生分组：{student.name}")
+        return student
 
     def init_by_xlsx(self, path: str) -> None | Exception:
         """
@@ -341,6 +344,58 @@ class Roster:
         self.history = []
         logger.info("已重置历史记录")
 
+    def select_person_without_weight(self, quant: int):
+        """
+        不考虑权重的随机抽取
+        :param quant: 指定的抽取数量
+        :return: 抽取到的学生，在列表里
+        """
+        try:
+            if quant > len(self.students):
+                raise ValueError(f"指定的抽取人数：{quant} 超过了学生数：{len(self.students)}")
+            selected: list[Student] = []
+            for _ in range(quant):
+                temp = random.choice(self.students)
+                if temp not in selected:
+                    selected.append(temp)
+                else:
+                    _ -= 1
+            return selected
+        except ValueError as e:
+            logger.error(f"{e}")
+            return e
+        except Exception as e:
+            logger.error(f"{e}")
+            return e
+
+    def select_group_without_weight(self, quant: int):
+        """
+        不考虑权重的小组抽选
+        :param quant: 指定的抽取数量
+        :return: 抽取到的小组名，在列表里
+        """
+        try:
+            if quant > len(self.groups):
+                raise ValueError(f"指定的抽取组数：{quant} 超过了小组数：{len(self.groups)}")
+            selected: list[str] = []
+            groups: list[str] = []
+            for student in self.students:
+                if student.group not in groups:
+                    groups.append(student.group)
+            for _ in range(quant):
+                temp = random.choice(groups)
+                if temp not in selected:
+                    selected.append(temp)
+                else:
+                    _ -= 1
+            return selected
+        except ValueError as e:
+            logger.error(f"{e}")
+            return e
+        except Exception as e:
+            logger.error(f"{e}")
+            return e
+
     def select_person(self, quant: int):
         """
         随机抽取指定数量的学生
@@ -348,8 +403,6 @@ class Roster:
         :return: 抽取到的学生，在列表里
         """
         try:
-            if quant > len(self.students):
-                raise ValueError(f"指定的抽取人数：{quant} 超过了学生数：{len(self.students)}")
             selected: list[Student] = []
             weights: list[tuple[float, float]] = []
             sum_of_weights: float = 0.0
@@ -420,6 +473,12 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
+
+    def random_group_slicer(self, quant: int, group_names: list[str]):
+        if quant > len(group_names):
+            raise ValueError(f"指定的抽取组数：{quant} 超过了所期望的小组数：{len(group_names)}")
+        groups: dict[str, list[Student]] = {}
+
 
 # TODO: 接下来创建花名册，并让其他模块导入该模块
 
