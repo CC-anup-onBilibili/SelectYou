@@ -1,7 +1,7 @@
 """
 与花名册相关的代码，程序核心代码之一
 """
-from queue import Queue
+import os
 import json
 import random
 from typing import Literal
@@ -195,7 +195,7 @@ class Roster:
         """
         try:
             json_content = None
-            with open(f"data/roster/{self.file_name}", "r", encoding = "utf-8") as f:
+            with open(f"../data/roster/{self.file_name}", "r", encoding = "utf-8") as f:
                 json_content = json.load(f)
                 logger.info(f"已读取Roster存储文件：data/roster/{self.file_name}")
             self.version = json_content["version"]
@@ -349,7 +349,7 @@ class Roster:
         """
         try:
             if quant > len(self.students):
-                raise ValueError(f"指定的抽取人数：{quant}超过了学生数：{len(self.students)}")
+                raise ValueError(f"指定的抽取人数：{quant} 超过了学生数：{len(self.students)}")
             selected: list[Student] = []
             weights: list[tuple[float, float]] = []
             sum_of_weights: float = 0.0
@@ -386,7 +386,7 @@ class Roster:
         """
         try:
             if quant > len(self.groups):
-                raise ValueError(f"指定的抽取组数：{quant}超过了总组数：{len(self.groups)}")
+                raise ValueError(f"指定的抽取组数：{quant} 超过了总组数：{len(self.groups)}")
             selected: dict[str, list[Student]] = {}
             weights: list[tuple[float, float]] = []
             sum_of_weights: float = 0.0
@@ -423,4 +423,4 @@ class Roster:
 
 # TODO: 接下来创建花名册，并让其他模块导入该模块
 
-roster = Roster("")
+roster = Roster("example")
