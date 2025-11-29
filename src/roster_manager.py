@@ -353,13 +353,12 @@ class Roster:
         try:
             if quant > len(self.students):
                 raise ValueError(f"指定的抽取人数：{quant} 超过了学生数：{len(self.students)}")
+            indexes = range(len(self.students))
             selected: list[Student] = []
             for _ in range(quant):
-                temp = random.choice(self.students)
-                if temp not in selected:
-                    selected.append(temp)
-                else:
-                    _ -= 1
+                index = random.choice(indexes)
+                selected.append(self.students[index])
+                indexes.remove(index)
             return selected
         except ValueError as e:
             logger.error(f"{e}")
@@ -367,7 +366,6 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
-        # TODO: 逻辑改掉
 
     def select_group_without_weight(self, quant: int):
         """
@@ -378,17 +376,19 @@ class Roster:
         try:
             if quant > len(self.groups):
                 raise ValueError(f"指定的抽取组数：{quant} 超过了小组数：{len(self.groups)}")
-            selected: list[str] = []
+            selected: dict[str, list[Student]] = {}
             groups: list[str] = []
             for student in self.students:
                 if student.group not in groups:
                     groups.append(student.group)
             for _ in range(quant):
                 temp = random.choice(groups)
-                if temp not in selected:
-                    selected.append(temp)
-                else:
-                    _ -= 1
+                selecte[temp] = []
+                groups.remove(temp)
+            selected_groups = list(selected.keys())
+            for student in self.students:
+                if student.group in selected_groups:
+                    selected[student.group].append(student)
             return selected
         except ValueError as e:
             logger.error(f"{e}")
@@ -396,7 +396,6 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
-        # TODO: 逻辑改掉
 
     def select_person(self, quant: int):
         """
