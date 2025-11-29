@@ -6,6 +6,7 @@ setTheme(Theme.AUTO)
 
 def init():
     app = QtWidgets.QApplication([])
+    app.setQuitOnLastWindowClosed(False)
     window = src.master_window.MainWindow()
     window.show()
     app.exec()
