@@ -8,6 +8,7 @@ from qfluentwidgets import (
 )
 import src.main_window
 import src.packed_bar
+import src.tray
 
 setTheme(Theme.AUTO)
 setThemeColor("#FFC107")
@@ -16,6 +17,8 @@ def init():
     app = QtWidgets.QApplication([])
     app.setQuitOnLastWindowClosed(False)
     window = src.main_window.MainWindow()
+    tray = src.tray.Tray(window)
+    tray.show()
     window.show()
     app.exec()
 

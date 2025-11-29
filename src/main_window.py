@@ -21,10 +21,6 @@ class PersonSelectionPage(QtWidgets.QWidget):
         self.result_text = "就决定是你了！"
         self.select_quant = 1
 
-        # 设置托盘图标
-        self.tray_icon = src.tray.Tray(self)
-        self.tray_icon.show()
-
         # 窗口基本信息
         self.setObjectName("个人抽选")
         self.icon = icon.FluentIcon.PEOPLE

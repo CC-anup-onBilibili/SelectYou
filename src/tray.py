@@ -51,6 +51,7 @@ class Tray(QtWidgets.QSystemTrayIcon):
         """
         显示主界面
         """
+        # TODO: 当程序刚启动且主界面在顶端显示时，按下菜单，会新建一个主界面实例，违反了单例模式
         from src.main_window import MainWindow
         logger.info("点击了显示主界面")
         if MainWindow.instance and not MainWindow.instance.isHidden():

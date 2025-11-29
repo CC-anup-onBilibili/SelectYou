@@ -20,7 +20,6 @@ class PackedBar(fluent.SimpleCardWidget):
         self.main_window = None
         self.last_pos = QtCore.QPoint(0, 0)
         self.is_dragging = False
-        self.select_quant = 1
 
         # 隐藏边框并置顶
         self.setWindowFlag(QtCore.Qt.WindowType.FramelessWindowHint)
@@ -40,19 +39,8 @@ class PackedBar(fluent.SimpleCardWidget):
         self.drag_button.mousePressEvent = self.start_move
         self.drag_button.mouseReleaseEvent = self._drag_button_released
 
-        # 减少按钮
-        self.minus_button = fluent.TransparentPushButton()
-        self.minus_button.setText("-1")
-        self.minus_button.clicked.connect(self.minus_button_clicked)
-
-        # 增加按钮
-        self.add_button = fluent.TransparentPushButton()
-        self.add_button.setText("+1")
-        self.add_button.clicked.connect(self.add_button_clicked)
-
         # 开始抽选按钮
-        self.start_button = fluent.TransparentPushButton()
-        self.start_button.setText(f"共{self.select_quant}人")
+        self.start_button = fluent.TransparentToolButton()
         self.start_button.setIcon(icon.FluentIcon.PLAY)
 
         # 主界面按钮
@@ -62,9 +50,7 @@ class PackedBar(fluent.SimpleCardWidget):
 
         # 设置主布局
         self.main_layout.addWidget(self.drag_button)
-        self.main_layout.addWidget(self.minus_button)
         self.main_layout.addWidget(self.start_button)
-        self.main_layout.addWidget(self.add_button)
         self.main_layout.addWidget(self.main_window_button)
         self.setLayout(self.main_layout)
 
@@ -127,54 +113,6 @@ class PackedBar(fluent.SimpleCardWidget):
         current_style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
         # 设置新样式（保留原有样式 + 禁止激活）
         ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, current_style | WS_EX_NOACTIVATE)
-
-    def minus_button_clicked(self):
-        """
-        当按下减少按钮时触发的动作
-        :return: 无返回值
-        """
-        logger.info("点击了减少按钮")
-        if self.select_quant > 1:
-            self.select_quant -= 1
-            self.start_button.setText(f"共{self.select_quant}人")
-            logger.info(f"已修改抽选人数为：{self.select_quant}")
-        else:
-            logger.warning("抽选人数不能小于1")
-            # fluent.TeachingTip.create(
-            #     target = self.minus_button,
-            #     icon = icon.FluentIcon.INFO,
-            #     title = "提示",
-            #     content = "抽选人数已达下限",
-            #     isClosable = True,
-            #     tailPosition = fluent.TeachingTipTailPosition.BOTTOM,
-            #     duration = 1000,
-            #     parent = self
-            # )
-            # logger.info("已弹出提示")
-
-    def add_button_clicked(self):
-        """
-        当按下增加按钮时触发的动作
-        :return: 无返回值
-        """
-        logger.info("点击了增加按钮")
-        if self.select_quant < len(roster.students):
-            self.select_quant += 1
-            self.start_button.setText(f"共{self.select_quant}人")
-            logger.info(f"已修改抽选人数为：{self.select_quant}")
-        else:
-            logger.warning("抽选人数不能大于总人数")
-            # fluent.TeachingTip.create(
-            #     target = self.add_button,
-            #     icon = icon.FluentIcon.INFO,
-            #     title = "提示",
-            #     content = "抽选人数已达上限",
-            #     isClosable = True,
-            #     tailPosition = fluent.TeachingTipTailPosition.BOTTOM,
-            #     duration = 1000,
-            #     parent = self
-            # )
-            # logger.info("已弹出提示")
 
     def start_button_clicked(self):
         """
