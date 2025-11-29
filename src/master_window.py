@@ -31,10 +31,11 @@ class PersonSelectionPage(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         # 创建结果显示区域
+        # TODO: 这里的scroll_area存在滚动条不显示的问题
         self.scroll_area = fluent.ScrollArea()
         self.scroll_area.setWidgetResizable(False)
-        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        # self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_layout = QtWidgets.QVBoxLayout()
         self.scroll_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.scroll_area.setLayout(self.scroll_layout)
@@ -45,6 +46,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
         self.main_label.setText("就决定是你了！")
         self.main_label.setFont(self.result_font)
         self.scroll_layout.addWidget(self.main_label)
+        self.scroll_layout.addStretch(1)
 
         # 创建按钮布局
         self.button_layout = QtWidgets.QHBoxLayout()
@@ -64,6 +66,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
         # 创建开始抽选按钮
         self.start_button = fluent.PrimaryPushButton()
         self.start_button.setText(f"共{self.select_quant}人    开始抽选！")
+        self.start_button.setIcon(icon.FluentIcon.PLAY)
         self.start_button.clicked.connect(self.start_button_clicked)
 
         # 创建设置按钮
@@ -162,6 +165,8 @@ class PersonSelectionPage(QtWidgets.QWidget):
         self.scroll_area.viewport().repaint()
 
         result = roster.select_person(self.select_quant)
+
+        # TODO: 这里要添加一个伪等待机制
 
         # 创建多个标签
         self.result_labels = []

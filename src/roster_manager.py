@@ -67,7 +67,7 @@ class Roster:
 
         # 权重更新设置
         self.weight_updater_mode: Literal['disabled', 'enabled'] = 'disabled'
-        self.weight_updater_coef: list = [1.5, 3]
+        self.weight_updater_coef: list = [1.0, 2]
 
         # 加载花名册
         self.load_by_json()
@@ -292,10 +292,10 @@ class Roster:
         """
         all_selected_times = map(lambda s: float(s.selected_times), self.students)
         average_selected_times = sum(all_selected_times) / float(len(self.students))
-        logger.info(f"平均抽选次数更新完成：{average_selected_times}")
+        logger.debug(f"平均抽选次数更新完成：{average_selected_times}")
         for student in self.students:
             student.weight = abs(float(student.selected_times) - average_selected_times) * self.weight_updater_coef[0] + student.custom_weight + random.randint(0, int(self.weight_updater_coef[1]))
-            logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
+            logger.debug(f"已更新Student：{student.name} 权重为：{student.weight}")
         logger.info("权重更新完成")
 
     def update_weight(self):
@@ -303,7 +303,7 @@ class Roster:
         根据权重更新模式更新权重
         :return: 无返回值
         """
-        logger.info(f"开始匹配权重更新模式")
+        logger.debug(f"开始匹配权重更新模式")
         match self.weight_updater_mode:
             case 'undefined':
                 logger.info("权重更新模式为undefined，不会更新权重")
