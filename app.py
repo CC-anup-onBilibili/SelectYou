@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets
 from qfluentwidgets import setTheme, Theme
-import src.master_window
+import src.main_window
+import src.packed_menu
 
 setTheme(Theme.AUTO)
 

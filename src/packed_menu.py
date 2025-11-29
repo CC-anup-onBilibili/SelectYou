@@ -4,6 +4,7 @@ import qfluentwidgets.common.icon as icon
 import ctypes
 from loguru import logger
 from src.roster_manager import roster
+from src.main_window import MainWindow
 
 class PackedMenu(fluent.SimpleCardWidget):
     """
@@ -13,6 +14,7 @@ class PackedMenu(fluent.SimpleCardWidget):
         super().__init__()
 
         # 可能会用到的一些变量
+        self.main_window = None
         self.last_pos = QtCore.QPoint(0, 0)
         self.is_dragging = False
         self.select_quant = 1
@@ -48,11 +50,17 @@ class PackedMenu(fluent.SimpleCardWidget):
         self.start_button.setText(f"共{self.select_quant}人")
         self.start_button.setIcon(icon.FluentIcon.PLAY)
 
+        # 主界面按钮
+        self.main_window_button = fluent.TransparentToolButton()
+        self.main_window_button.setIcon(icon.FluentIcon.HOME)
+        self.main_window_button.clicked.connect(self.main_window_button_clicked)
+
         # 设置主布局
         self.main_layout.addWidget(self.drag_button)
         self.main_layout.addWidget(self.minus_button)
         self.main_layout.addWidget(self.start_button)
         self.main_layout.addWidget(self.add_button)
+        self.main_layout.addWidget(self.main_window_button)
         self.setLayout(self.main_layout)
 
         # 设置 Windows 扩展样式
@@ -91,8 +99,8 @@ class PackedMenu(fluent.SimpleCardWidget):
         if self.is_dragging:
             # 修正变量名并使用正确的方法
             new_pos = QtGui.QCursor.pos() - self.last_pos
-            # 获取屏幕可用区域（排除任务栏）
-            screen_geometry = QtGui.QGuiApplication.primaryScreen().availableGeometry()
+            # 获取屏幕区域
+            screen_geometry = QtGui.QGuiApplication.primaryScreen().geometry()
             # 限制窗口位置
             new_pos.setX(max(screen_geometry.left(),
                              min(new_pos.x(), screen_geometry.right() - self.width())))
@@ -161,3 +169,27 @@ class PackedMenu(fluent.SimpleCardWidget):
                 parent = self
             )
             logger.info("已弹出提示")
+
+    def start_button_clicked(self):
+        """
+        当按下开始抽选按钮时触发的动作
+        :return: 无返回值
+        """
+        # TODO: 想一个绝妙的结果显示方式！
+
+    def main_window_button_clicked(self):
+        """
+        当按下主界面按钮时触发的动作
+        :return: 无返回值
+        """
+        logger.info("点击了主界面按钮")
+        if MainWindow.instance:
+            logger.debug("已找到主界面实例")
+            MainWindow.instance.raise_()
+            MainWindow.instance.activateWindow()
+        else:
+            logger.debug("已创建主界面实例")
+            self.main_window = MainWindow.get_instance()
+            self.main_window.show()
+            MainWindow.instance.raise_()
+            MainWindow.instance.activateWindow()

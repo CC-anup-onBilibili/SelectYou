@@ -188,6 +188,9 @@ class PersonSelectionPage(QtWidgets.QWidget):
 
 
 class MainWindow(fluent.MSFluentWindow):
+
+    instance = None
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("就决定是你了！")
@@ -199,3 +202,14 @@ class MainWindow(fluent.MSFluentWindow):
 
         self.Pages = [PersonSelectionPage()]
         self.addSubInterface(self.Pages[0], self.Pages[0].icon, "个人抽选")
+
+    def closeEvent(self, event):
+        MainWindow.instance = None
+        logger.info("已关闭主窗口")
+        event.accept()
+
+    @classmethod
+    def get_instance(cls, parent = None):
+        if cls.instance is None:
+            cls.instance = cls()
+        return cls.instance
