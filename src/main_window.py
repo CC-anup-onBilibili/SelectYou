@@ -1,7 +1,11 @@
+"""
+软件主界面
+"""
 from PySide6 import QtWidgets, QtGui, QtCore
 import qfluentwidgets as fluent
 import qfluentwidgets.common.icon as icon
 from loguru import logger
+import src.tray
 from roster_manager import roster
 
 master = None
@@ -16,6 +20,10 @@ class PersonSelectionPage(QtWidgets.QWidget):
         # 可能会用到的一些变量
         self.result_text = "就决定是你了！"
         self.select_quant = 1
+
+        # 设置托盘图标
+        self.tray_icon = src.tray.Tray(self)
+        self.tray_icon.show()
 
         # 窗口基本信息
         self.setObjectName("个人抽选")

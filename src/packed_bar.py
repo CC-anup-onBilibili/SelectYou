@@ -1,3 +1,6 @@
+"""
+软件收纳形态的样式
+"""
 from PySide6 import QtWidgets, QtGui, QtCore
 import qfluentwidgets as fluent
 import qfluentwidgets.common.icon as icon
@@ -6,7 +9,7 @@ from loguru import logger
 from src.roster_manager import roster
 from src.main_window import MainWindow
 
-class PackedMenu(fluent.SimpleCardWidget):
+class PackedBar(fluent.SimpleCardWidget):
     """
     收纳式抽选菜单，可悬浮于其他窗口显示
     """
@@ -28,6 +31,8 @@ class PackedMenu(fluent.SimpleCardWidget):
 
         # 创建布局
         self.main_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.setSpacing(0)
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
 
         # 设置拖动按钮
         self.drag_button = fluent.TransparentToolButton()
@@ -94,6 +99,7 @@ class PackedMenu(fluent.SimpleCardWidget):
         """
         self.is_dragging = False
         self.last_pos = QtCore.QPoint(0, 0)
+        # TODO: 加入收纳至屏幕侧边的功能
 
     def mouseMoveEvent(self, event):
         if self.is_dragging:
@@ -102,10 +108,10 @@ class PackedMenu(fluent.SimpleCardWidget):
             # 获取屏幕区域
             screen_geometry = QtGui.QGuiApplication.primaryScreen().geometry()
             # 限制窗口位置
-            new_pos.setX(max(screen_geometry.left(),
-                             min(new_pos.x(), screen_geometry.right() - self.width())))
-            new_pos.setY(max(screen_geometry.top(),
-                             min(new_pos.y(), screen_geometry.bottom() - self.height())))
+            new_pos.setX(max(screen_geometry.left() + 5,
+                             min(new_pos.x(), screen_geometry.right() - self.width() - 5)))
+            new_pos.setY(max(screen_geometry.top() + 5,
+                             min(new_pos.y(), screen_geometry.bottom() - self.height() - 5)))
             self.move(new_pos)
         super().mouseMoveEvent(event)
 
@@ -134,17 +140,17 @@ class PackedMenu(fluent.SimpleCardWidget):
             logger.info(f"已修改抽选人数为：{self.select_quant}")
         else:
             logger.warning("抽选人数不能小于1")
-            fluent.TeachingTip.create(
-                target = self.minus_button,
-                icon = icon.FluentIcon.INFO,
-                title = "提示",
-                content = "抽选人数已达下限",
-                isClosable = True,
-                tailPosition = fluent.TeachingTipTailPosition.BOTTOM,
-                duration = 1000,
-                parent = self
-            )
-            logger.info("已弹出提示")
+            # fluent.TeachingTip.create(
+            #     target = self.minus_button,
+            #     icon = icon.FluentIcon.INFO,
+            #     title = "提示",
+            #     content = "抽选人数已达下限",
+            #     isClosable = True,
+            #     tailPosition = fluent.TeachingTipTailPosition.BOTTOM,
+            #     duration = 1000,
+            #     parent = self
+            # )
+            # logger.info("已弹出提示")
 
     def add_button_clicked(self):
         """
@@ -158,17 +164,17 @@ class PackedMenu(fluent.SimpleCardWidget):
             logger.info(f"已修改抽选人数为：{self.select_quant}")
         else:
             logger.warning("抽选人数不能大于总人数")
-            fluent.TeachingTip.create(
-                target = self.add_button,
-                icon = icon.FluentIcon.INFO,
-                title = "提示",
-                content = "抽选人数已达上限",
-                isClosable = True,
-                tailPosition = fluent.TeachingTipTailPosition.BOTTOM,
-                duration = 1000,
-                parent = self
-            )
-            logger.info("已弹出提示")
+            # fluent.TeachingTip.create(
+            #     target = self.add_button,
+            #     icon = icon.FluentIcon.INFO,
+            #     title = "提示",
+            #     content = "抽选人数已达上限",
+            #     isClosable = True,
+            #     tailPosition = fluent.TeachingTipTailPosition.BOTTOM,
+            #     duration = 1000,
+            #     parent = self
+            # )
+            # logger.info("已弹出提示")
 
     def start_button_clicked(self):
         """
