@@ -31,7 +31,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         # 创建结果显示区域
-        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_area = fluent.ScrollArea()
         self.scroll_area.setWidgetResizable(False)
         self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -63,7 +63,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
 
         # 创建开始抽选按钮
         self.start_button = fluent.PrimaryPushButton()
-        self.start_button.setText(f"共{self.select_quant}人 开始抽选！")
+        self.start_button.setText(f"共{self.select_quant}人    开始抽选！")
         self.start_button.clicked.connect(self.start_button_clicked)
 
         # 创建设置按钮
@@ -138,18 +138,40 @@ class PersonSelectionPage(QtWidgets.QWidget):
         :return: 无返回值
         """
         logger.info(f"点击了开始抽选按钮，目前人数为：{self.select_quant}")
-        # TODO: 修正该处错误哈
-        # if self.result_labels:
-        #     for label in self.result_labels:
-        #         self.scroll_layout.removeWidget(label)
-        #         logger.info(f"已删除结果标签：{label.text()}")
-        # else:
-        #     self.scroll_layout.removeWidget(self.main_label)
-        #     logger.info("已删除主标签")
-        # self.result_labels = roster.select_person(self.select_quant)
-        # for label in self.result_labels:
-        #     self.scroll_layout.addWidget(label)
-        #     logger.info(f"已添加结果标签：{label.text()}")
+
+        # 清理现有结果标签
+        if self.result_labels:
+            for label in self.result_labels:
+                if label and label.parent():  # 检查标签是否存在且有父对象
+                    self.scroll_layout.removeWidget(label)
+                    label.setParent(None)
+                    label.deleteLater()
+                    logger.debug(f"已删除结果标签：{label.text()}")
+            self.result_labels.clear()  # 清空列表
+
+        # 删除主标签（如果存在）
+        if hasattr(self, 'main_label') and self.main_label and self.main_label.parent():
+            self.scroll_layout.removeWidget(self.main_label)
+            self.main_label.setParent(None)
+            self.main_label.deleteLater()
+            logger.debug("已删除主标签")
+            self.main_label = None  # 清除引用
+
+        self.scroll_layout.update()
+        self.adjustSize()
+        self.scroll_area.viewport().repaint()
+
+        result = roster.select_person(self.select_quant)
+
+        # 创建多个标签
+        self.result_labels = []
+        for student in result:
+            label = QtWidgets.QLabel()
+            label.setText(f"{student.code}  {student.name}")
+            label.setFont(self.result_font)
+            self.scroll_layout.addWidget(label)
+            self.result_labels.append(label)
+            logger.debug(f"已添加结果标签：{label.text()}")
 
     def settings_button_clicked(self):
         """
@@ -159,11 +181,12 @@ class PersonSelectionPage(QtWidgets.QWidget):
         logger.info("点击了设置按钮")
         # TODO: 先给设置页面做出来吧
 
-class MainWindow(fluent.FluentWindow):
+
+class MainWindow(fluent.MSFluentWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("就决定是你了！")
-        # self.setWindowIcon(QtGui.QIcon("icon.ico"))
+        self.setWindowIcon(QtGui.QIcon("../resources/icon/dev.png"))
         self.setMinimumSize(800, 600)
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)

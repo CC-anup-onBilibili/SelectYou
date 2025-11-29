@@ -32,7 +32,7 @@ class Student:
         :return: 是否相等
         """
         res: bool = self.code == other.code and self.name == other.name and self.sex == other.sex and self.code == other.code and self.group == other.group
-        logger.info(f"比较学生：{self.name}，{other.name}，结果为：{res}")
+        logger.debug(f"比较学生：{self.name}，{other.name}，结果为：{res}")
         return res
 
 class History:
@@ -367,6 +367,7 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
+        # TODO: 逻辑改掉
 
     def select_group_without_weight(self, quant: int):
         """
@@ -395,6 +396,7 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
+        # TODO: 逻辑改掉
 
     def select_person(self, quant: int):
         """
@@ -430,6 +432,7 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
+        # TODO: 逻辑改掉
 
     def select_group(self, quant: int):
         """
@@ -473,6 +476,7 @@ class Roster:
         except Exception as e:
             logger.error(f"{e}")
             return e
+        # TODO: 逻辑改掉
 
     def random_group_slicer(self, quant: int, group_names: list[str]):
         if quant > len(group_names):
