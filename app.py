@@ -19,7 +19,6 @@ def init():
     window = src.main_window.MainWindow()
     tray = src.tray.Tray(window)
     tray.show()
-    window.show()
     app.exec()
 
 if __name__ == '__main__':

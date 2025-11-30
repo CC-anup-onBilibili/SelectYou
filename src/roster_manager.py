@@ -482,6 +482,7 @@ class Roster:
             raise ValueError(f"指定的抽取组数：{quant} 超过了所期望的小组数：{len(group_names)}")
         groups: dict[str, list[Student]] = {}
 
+    # TODO: 差一个数据持久化
 
 # TODO: 接下来创建花名册，并让其他模块导入该模块
 

@@ -5,7 +5,7 @@ from PySide6 import QtWidgets, QtGui, QtCore
 import qfluentwidgets as fluent
 import qfluentwidgets.common.icon as icon
 from loguru import logger
-import src.tray
+import src.settings
 from roster_manager import roster
 
 master = None
@@ -204,8 +204,8 @@ class MainWindow(fluent.MSFluentWindow):
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
 
-        self.Pages = [PersonSelectionPage()]
-        self.addSubInterface(self.Pages[0], self.Pages[0].icon, "个人抽选")
+        self.pages = [PersonSelectionPage()]
+        self.addSubInterface(self.pages[0], self.pages[0].icon, "个人抽选")
 
     def closeEvent(self, event):
         MainWindow.instance = None

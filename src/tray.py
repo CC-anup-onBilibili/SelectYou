@@ -24,7 +24,7 @@ class Tray(QtWidgets.QSystemTrayIcon):
         """)
 
         # 显示主界面
-        self.show_main_window_action = QtGui.QAction("显示主界面", parent)
+        self.show_main_window_action = QtGui.QAction("就决定是你了！", parent)
         self.show_main_window_action.triggered.connect(self.show_main_window)
 
         # 显示设置页面
@@ -51,7 +51,6 @@ class Tray(QtWidgets.QSystemTrayIcon):
         """
         显示主界面
         """
-        # TODO: 当程序刚启动且主界面在顶端显示时，按下菜单，会新建一个主界面实例，违反了单例模式
         from src.main_window import MainWindow
         logger.info("点击了显示主界面")
         if MainWindow.instance and not MainWindow.instance.isHidden():
@@ -75,7 +74,22 @@ class Tray(QtWidgets.QSystemTrayIcon):
         显示设置页面
         """
         logger.info("点击了显示设置页面")
-        # TODO: 这里需要设置页面！
+        from src.settings import SettingsWindow
+        if SettingsWindow.instance and not SettingsWindow.instance.isHidden():
+            logger.debug("已找到设置页面实例")
+            SettingsWindow.instance.raise_()
+            SettingsWindow.instance.activateWindow()
+        elif SettingsWindow.instance and SettingsWindow.instance.isHidden():
+            logger.debug("已恢复隐藏的设置页面实例")
+            SettingsWindow.instance.show()
+            SettingsWindow.instance.raise_()
+            SettingsWindow.instance.activateWindow()
+        else:
+            logger.debug("已创建设置页面实例")
+            SettingsWindow.instance = SettingsWindow.get_instance()
+            SettingsWindow.instance.show()
+            SettingsWindow.instance.raise_()
+            SettingsWindow.instance.activateWindow()
 
     def reboot(self):
         """
