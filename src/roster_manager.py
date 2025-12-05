@@ -23,7 +23,7 @@ class Student:
         self.selected_times = selected_times
         self.weight = weight
         self.custom_weight = custom_weight
-        logger.info(f"已初始化Student：{name}")
+        logger.debug(f"已初始化Student：{name}")
 
     def __eq__(self, other):
         """
@@ -42,7 +42,7 @@ class History:
     def __init__(self, selected: list[Student], time: datetime.datetime = datetime.datetime.now()):
         self.selected = selected
         self.time = time
-        logger.info(f"已初始化History：{time}")
+        logger.debug(f"已初始化History：{time}")
 
 class Roster:
     """
@@ -84,7 +84,7 @@ class Roster:
         try:
             if student not in self.students:
                 self.students.append(student)
-                logger.info(f"已添加Student：{student.name}")
+                logger.debug(f"已添加Student：{student.name}")
         except ValueError as e:
             logger.error(f"{e}")
             return None
@@ -103,7 +103,7 @@ class Roster:
             for student in self.students:
                 if student.name == param[1] or student.code == param[1]:
                     self.students.remove(student)
-                    logger.info(f"已删除Student：{student.name}")
+                    logger.debug(f"已删除Student：{student.name}")
                     return
             logger.warning(f"未找到学生：{param[1]}")
         except TypeError as e:
@@ -117,7 +117,7 @@ class Roster:
         :return: None
         """
         student.group = group
-        logger.info(f"已设置学生分组：{student.name}")
+        logger.debug(f"已设置学生分组：{student.name}")
         return student
 
     def init_by_xlsx(self, path: str) -> None | Exception:
@@ -136,7 +136,7 @@ class Roster:
                         "学号": int, "分组": str },  # 修改分组类型为str以适应可能的非数字分组
                 engine="openpyxl"
             )
-            logger.info(f"已读取Excel文件：{path}")
+            logger.debug(f"已读取Excel文件：{path}")
             
             # 检查所需要的列是否存在
             required_columns = ["姓名", "性别", "学号", "分组"]
@@ -161,10 +161,10 @@ class Roster:
                     int(row["学号"]), 
                     str(row["分组"]).strip()
                 )
-                logger.info(f"找到学生：{row['姓名']}-{row['性别']}-{row['学号']}-{row['分组']}")
+                logger.debug(f"找到学生：{row['姓名']}-{row['性别']}-{row['学号']}-{row['分组']}")
                 if student not in self.students:
                     self.students.append(student)
-                    logger.info(f"已添加Student：{student.name}")
+                    logger.debug(f"已添加Student：{student.name}")
                     
             self.set_group()
             logger.info(f"已初始化Roster：{self.name}")
@@ -214,7 +214,7 @@ class Roster:
                         student["weight"]
                     )
                 )
-                logger.info(f"已加载Student：{student['name']}")
+                logger.debug(f"已加载Student：{student['name']}")
             for history in json_content["history"]:
                 self.history.append(
                     History(
@@ -222,7 +222,6 @@ class Roster:
                         datetime.datetime.fromisoformat(history["time"])
                     )
                 )
-                logger.info(f"已加载History：{history['time']}")
             self.set_weight_updater_mode(json_content["weight_updater_mode"])
         except FileNotFoundError:
             logger.warning(f"未找到Roster存储文件：data/roster/{self.file_name}，将创建新的花名册")
@@ -306,7 +305,7 @@ class Roster:
         logger.debug(f"开始匹配权重更新模式")
         match self.weight_updater_mode:
             case 'undefined':
-                logger.info("权重更新模式为undefined，不会更新权重")
+                logger.debug("权重更新模式为undefined，不会更新权重")
                 return
             # case 'fp':
             #     logger.info("权重更新模式为fp，将使用公平可预测权重更新")
@@ -318,7 +317,7 @@ class Roster:
             #     logger.info("权重更新模式为up，将使用非公平可预测权重更新")
             #     self._unfair_predictable_updater()
             case 'enabled':
-                logger.info("权重更新模式为enabled，即将开始更新")
+                logger.debug("权重更新模式为enabled，即将开始更新")
                 self._unfair_unpredicted_updater()
 
     def add_history(self, students: list[Student]):
@@ -329,7 +328,7 @@ class Roster:
         """
         h = History(students)
         self.history.append(h)
-        logger.info(f"已添加历史记录：{h.selected}")
+        logger.debug(f"已添加历史记录：{h.selected}")
 
     def reset_weight_history(self):
         """
@@ -338,9 +337,9 @@ class Roster:
         """
         for student in self.students:
             student.selected_times = 0
-            logger.info(f"已重置Student：{student.name} 抽选次数")
+            logger.debug(f"已重置Student：{student.name} 抽选次数")
             student.weight = 1.0
-            logger.info(f"已重置Student：{student.name} 权重")
+            logger.debug(f"已重置Student：{student.name} 权重")
         self.history = []
         logger.info("已重置历史记录")
 
@@ -353,7 +352,7 @@ class Roster:
         try:
             if quant > len(self.students):
                 raise ValueError(f"指定的抽取人数：{quant} 超过了学生数：{len(self.students)}")
-            indexes = range(len(self.students))
+            indexes = list(range(len(self.students)))
             selected: list[Student] = []
             for _ in range(quant):
                 index = random.choice(indexes)
@@ -383,7 +382,7 @@ class Roster:
                     groups.append(student.group)
             for _ in range(quant):
                 temp = random.choice(groups)
-                selecte[temp] = []
+                selected[temp] = []
                 groups.remove(temp)
             selected_groups = list(selected.keys())
             for student in self.students:

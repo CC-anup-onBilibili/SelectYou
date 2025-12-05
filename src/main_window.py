@@ -7,6 +7,7 @@ import qfluentwidgets.common.icon as icon
 from loguru import logger
 import src.settings
 from src.roster_manager import roster
+import time
 
 master = None
 
@@ -39,7 +40,6 @@ class PersonSelectionPage(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout()
 
         # 创建结果显示区域
-        # FIXME: 修复标签重叠问题
         self.flow_layout = fluent.FlowLayout()
         self.flow_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
@@ -146,24 +146,58 @@ class PersonSelectionPage(QtWidgets.QWidget):
         当按下开始抽选按钮时触发的动作
         :return: 无返回值
         """
+        def start_animation():
+            """开始抽选动画"""
+            
+            self.timer = QtCore.QTimer()
+            self.timer.timeout.connect(update_animation)
+            self.timer.start(100)
+            
+            self.animation_step = 0
+            
+            QtCore.QTimer.singleShot(1000, finish_animation)
+        
+        def update_animation():
+            """更新动画"""
+            nonlocal animation_results, labels
+            for i in range(self.select_quant):
+                labels[i].setText(f"{animation_results[self.animation_step][i].code}  "+
+                                  f"{animation_results[self.animation_step][i].name}")
+                self.animation_step += 1
+        
+        def finish_animation():
+            """结束动画，展示抽选结果"""
+            self.timer.stop()
+            
+            nonlocal result, labels
+            for i in range(self.select_quant):
+                labels[i].setText(f"{result[i].code}  {result[i].name}")
+        
         logger.info(f"点击了开始抽选按钮，目前人数为：{self.select_quant}")
 
-        self.flow_layout.removeAllWidgets()
-        self.result_labels = []
-
+        # 重写一个更安全的标签删除代码
+        while self.flow_layout.count() > 0:
+            item = self.flow_layout.takeAt(0)
+            if hasattr(item, "widget") and callable(getattr(item, "widget")):
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+            else:
+                if hasattr(item, "deleteLater") and callable(getattr(item, "deleteLater")):
+                    item.deleteLater()
+        
+        animation_results = []
+        labels = []
+        for i in range(10):
+            animation_results.append(roster.select_person_without_weight(self.select_quant))
+        for i in range(self.select_quant):
+            labels.append(QtWidgets.QLabel())
+            labels[i].setFont(self.result_font)
+            self.flow_layout.addWidget(labels[i])
+        
         result = roster.select_person(self.select_quant)
-
-        # TODO: 这里要添加一个伪等待机制
-
-        # 创建多个标签
-        self.result_labels = []
-        for student in result:
-            label = QtWidgets.QLabel()
-            label.setText(f"{student.code}  {student.name}")
-            label.setFont(self.result_font)
-            self.flow_layout.addWidget(label)
-            self.result_labels.append(label)
-            logger.debug(f"已添加结果标签：{label.text()}")
+        
+        start_animation()
 
 class MainWindow(fluent.MSFluentWindow):
 
