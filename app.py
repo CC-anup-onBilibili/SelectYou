@@ -16,8 +16,8 @@ setThemeColor("#FFC107")
 def init():
     app = QtWidgets.QApplication([])
     app.setQuitOnLastWindowClosed(False)
-    window = src.main_window.MainWindow()
-    tray = src.tray.Tray(window)
+    main_window = src.main_window.MainWindow()
+    tray = src.tray.Tray(main_window)
     tray.show()
     app.exec()
 

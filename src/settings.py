@@ -36,39 +36,27 @@ from PySide6 import QtWidgets, QtGui, QtCore
 class SettingGroup(fluent.QConfig):
     """设置项们"""
     RunAtStartup = fluent.ConfigItem("BasicSettings", "RunAtStartup", False, fluent.BoolValidator(), restart = True)
-
-    Theme = fluent.OptionsConfigItem("BasicSettings", "Theme", "AUTO", fluent.OptionsValidator(["LIGHT", "DARK", "AUTO"]))
-
-    ThemeColor = fluent.ColorConfigItem("BasicSettings", "ThemeColor", "#FFC107")
+    Theme = fluent.OptionsConfigItem("QFluentWidgets", "ThemeMode", "AUTO", fluent.OptionsValidator(["LIGHT", "DARK", "AUTO"]))
+    ThemeColor = fluent.ColorConfigItem("QFluentWidgets", "ThemeColor", "#FFC107")
 
     SelectionWaitingTime = fluent.RangeConfigItem("PersonSelectionSettings", "WaitingTime", 1, fluent.RangeValidator(0, 10))
-
     SelectionSizeOfResultLabels = fluent.RangeConfigItem("PersonSelectionSettings", "SizeOfResultLabels", 64, fluent.RangeValidator(24, 96))
-
     SelectionResultDisplayMode = fluent.OptionsConfigItem("PersonSelectionSettings", "ResultDisplayMode", "group code name", fluent.OptionsValidator(["name", "group name", "code name", "group code name"]))
-
     SelectionSoundEnable = fluent.ConfigItem("PersonSelectionSettings", "SelectionSoundEnable", False, fluent.BoolValidator())
-
     SelectionSoundPath = fluent.ConfigItem("PersonSelectionSettings", "SelectionSoundPath", "../resources/sound")
-
     SelectionSoundVolume = fluent.RangeConfigItem("PersonSelectionSettings", "SelectionSoundVolume", 50, fluent.RangeValidator(0, 100))
-
+    
     PackedBarPosition = fluent.OptionsConfigItem("PackedBarSettings", "PackedBarPosition", "bottom", fluent.OptionsValidator(["bottom", "left", "right", "bottomleft", "bottomright"]))
-
     PackedBarTransparence = fluent.RangeConfigItem("PackedBarSettings", "PackedBarTransparence", 80, fluent.RangeValidator(0, 100))
-
     PackedBarWidgetArrangement = fluent.OptionsConfigItem("PackedBarSettings", "PackedBarWidgetArrangement", "vertical", fluent.OptionsValidator(["vertical", "horizontal"]), restart = True)
-
+    
     ShowMainWindow = fluent.ConfigItem("TrayIconSettings", "ShowMainWindow", True, fluent.BoolValidator(), restart = True)
-
     ShowSettingsWindow = fluent.ConfigItem("TrayIconSettings", "ShowSettingsWindow", True, fluent.BoolValidator(), restart = True)
-
     ShowReboot = fluent.ConfigItem("TrayIconSettings", "ShowReboot", True, fluent.BoolValidator(), restart = True)
-
     ShowQuit = fluent.ConfigItem("TrayIconSettings", "ShowQuit", True, fluent.BoolValidator(), restart = True)
 
 settings = SettingGroup()
-settings.load("../data/settings/settings.json")
+fluent.qconfig.load("../data/settings/settings.json", settings)
 
 class BasicSettingsPage(QtWidgets.QWidget):
     """基础设置页面"""
