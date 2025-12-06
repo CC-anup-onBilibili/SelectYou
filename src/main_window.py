@@ -46,7 +46,10 @@ class PersonSelectionPage(QtWidgets.QWidget):
         self.flow_container = QtWidgets.QWidget()
         self.flow_container.setLayout(self.flow_layout)
         # 将flow_container撑满全屏
-        self.flow_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.flow_container.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
 
         # 创建主标签
         self.result_labels = []
@@ -151,6 +154,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
             
             self.timer = QtCore.QTimer()
             self.timer.timeout.connect(update_animation)
+            self.start_button.setDisabled(True)
             self.timer.start(100)
             
             self.animation_step = 0
@@ -159,6 +163,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
         
         def update_animation():
             """更新动画"""
+            # FIXME: 修复animation_result[self.animation_step]的IndexError
             nonlocal animation_results, labels
             for i in range(self.select_quant):
                 labels[i].setText(f"{animation_results[self.animation_step][i].code}  "+
@@ -168,7 +173,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
         def finish_animation():
             """结束动画，展示抽选结果"""
             self.timer.stop()
-            
+            self.start_button.setDisabled(False)
             nonlocal result, labels
             for i in range(self.select_quant):
                 labels[i].setText(f"{result[i].code}  {result[i].name}")
