@@ -166,7 +166,7 @@ class PersonSelectionPage(QtWidgets.QWidget):
             # FIXME: 修复animation_result[self.animation_step]的IndexError
             nonlocal animation_results, labels
             for i in range(self.select_quant):
-                labels[i].setText(f"{animation_results[self.animation_step][i].code}  "+
+                labels[i].setText(f"{animation_results[self.animation_step][i].code}  "
                                   f"{animation_results[self.animation_step][i].name}")
                 self.animation_step += 1
         
@@ -187,9 +187,8 @@ class PersonSelectionPage(QtWidgets.QWidget):
                 widget = item.widget()
                 if widget is not None:
                     widget.deleteLater()
-            else:
-                if hasattr(item, "deleteLater") and callable(getattr(item, "deleteLater")):
-                    item.deleteLater()
+            elif hasattr(item, "deleteLater") and callable(getattr(item, "deleteLater")):
+                item.deleteLater()
         
         animation_results = []
         labels = []
