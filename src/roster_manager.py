@@ -119,6 +119,14 @@ class Roster:
         student.group = group
         logger.debug(f"已设置学生分组：{student.name}")
         return student
+    
+    @property
+    def group_quant(self):
+        """
+        获取小组数量
+        :return: 小组数量
+        """
+        return len(set([student.group for student in self.students]))
 
     def init_by_xlsx(self, path: str) -> None | Exception:
         """
