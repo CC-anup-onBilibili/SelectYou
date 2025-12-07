@@ -381,8 +381,8 @@ class Roster:
         :return: 抽取到的小组名，在列表里
         """
         try:
-            if quant > len(self.groups):
-                raise ValueError(f"指定的抽取组数：{quant} 超过了小组数：{len(self.groups)}")
+            if quant > self.group_quant:
+                raise ValueError(f"指定的抽取组数：{quant} 超过了小组数：{self.group_quant}")
             selected: dict[str, list[Student]] = {}
             groups: list[str] = []
             for student in self.students:
@@ -447,8 +447,8 @@ class Roster:
         :return: 抽取到的小组和成员，在字典里
         """
         try:
-            if quant > len(self.groups):
-                raise ValueError(f"指定的抽取组数：{quant} 超过了总组数：{len(self.groups)}")
+            if quant > self.group_quant:
+                raise ValueError(f"指定的抽取组数：{quant} 超过了总组数：{self.group_quant}")
             selected: dict[str, list[Student]] = {}
             weights: list[tuple[float, float]] = []
             sum_of_weights: float = 0.0

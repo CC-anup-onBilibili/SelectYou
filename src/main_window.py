@@ -19,7 +19,6 @@ class PersonSelectionPage(QtWidgets.QWidget):
         super().__init__()
 
         # 可能会用到的一些变量
-        self.result_text = "就决定是你了！"
         self.select_quant = 1
 
         # 窗口基本信息
@@ -205,13 +204,66 @@ class PersonSelectionPage(QtWidgets.QWidget):
 
 class GroupSelectionPage(QtWidgets.QWidget):
     """
-    个人抽选页面
+    小组抽选页面
     """
+    class GroupLabel(QtWidgets.QLabel):
+        """
+        小组标签
+        """
+        class GroupMemberMessageBox(fluent.MessageBoxBase):
+            """
+            小组成员信息框
+            """
+            def __init__(self, parent, group_name, group_members):
+                super().__init__(parent = parent)
+                
+                self.cancelButton.hide()
+                self.buttonLayout.insertStretch(1)
+                
+                self.title = fluent.SubtitleLabel(f"{group_name} 成员：")
+                self.viewLayout.addWidget(self.title)
+                
+                self.labels = []
+                for i in range(len(group_members)):
+                    self.labels.append(fluent.BodyLabel(f"·{group_members[i].code}  {group_members[i].name}"))
+                    self.viewLayout.addWidget(self.labels[i])
+        
+        def __init__(self, parent, group_name, group_members):
+            super().__init__(parent = parent)
+            
+            self.group_name = group_name
+            self.group_members = group_members
+            
+            self.font_ = QtGui.QFont()
+            self.font_.setPointSize(64)
+            self.font_.setBold(True)
+            
+            self.setText(f"{group_name}")
+            self.setFont(self.font_)
+        
+        def mousePressEvent(self, ev, /):
+            """
+            当按下标签时触发的动作
+            :param ev: 鼠标事件
+            :return: 无返回值
+            """
+            logger.info(f"点击了小组标签：{self.group_name}")
+            if ev.button() == QtCore.Qt.MouseButton.LeftButton:
+                self.on_click()
+            else:
+                super().mousePressEvent(ev)
+        
+        def on_click(self):
+            """
+            当按下标签时触发的动作
+            :return: 无返回值
+            """
+            GroupSelectionPage.GroupLabel.GroupMemberMessageBox(self.parent(), self.group_name, self.group_members).exec()
+    
     def __init__(self):
         super().__init__()
         
         # 可能会用到的一些变量
-        self.result_text = "就决定是你们了！"
         self.select_quant = 1
         
         # 窗口基本信息
@@ -358,10 +410,10 @@ class GroupSelectionPage(QtWidgets.QWidget):
             """更新动画"""
             # FIXME: 修复animation_result[self.animation_step]的IndexError
             nonlocal animation_results, labels
+            temp = list( animation_results[self.animation_step].keys())
             for i in range(self.select_quant):
-                # TODO: 改变此处的显示模式
-                labels[i].setText(f"{animation_results[self.animation_step][i].code}  "
-                                  f"{animation_results[self.animation_step][i].name}")
+                # FIXME: TypeError: 'dict_keys' object is not subscriptable
+                labels[i].setText(f"{temp[i]}")
                 self.animation_step += 1
         
         def finish_animation():
@@ -369,9 +421,18 @@ class GroupSelectionPage(QtWidgets.QWidget):
             self.timer.stop()
             self.start_button.setDisabled(False)
             nonlocal result, labels
-            for i in range(self.select_quant):
-                # TODO: 还有这里的
-                labels[i].setText(f"{result[i].code}  {result[i].name}")
+            while self.flow_layout.count() > 0:
+                item = self.flow_layout.takeAt(0)
+                if hasattr(item, "widget") and callable(getattr(item, "widget")):
+                    widget = item.widget()
+                    if widget is not None:
+                        widget.deleteLater()
+                elif hasattr(item, "deleteLater") and callable(getattr(item, "deleteLater")):
+                    item.deleteLater()
+            
+            for i in result:
+                label = GroupSelectionPage.GroupLabel(self, i, result[i])
+                self.flow_layout.addWidget(label)
         
         logger.info(f"点击了开始抽选按钮，目前组数为：{self.select_quant}")
         
@@ -388,13 +449,13 @@ class GroupSelectionPage(QtWidgets.QWidget):
         animation_results = []
         labels = []
         for i in range(10):
-            animation_results.append(roster.select_person_without_weight(self.select_quant))
+            animation_results.append(roster.select_group_without_weight(self.select_quant))
         for i in range(self.select_quant):
             labels.append(QtWidgets.QLabel())
             labels[i].setFont(self.result_font)
             self.flow_layout.addWidget(labels[i])
         
-        result = roster.select_person(self.select_quant)
+        result = roster.select_group(self.select_quant)
         
         start_animation()
 
