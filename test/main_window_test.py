@@ -3,7 +3,7 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from qfluentwidgets import setTheme, Theme
 
 if __name__ == '__main__':
-    setTheme(Theme.DARK)
+    setTheme(Theme.AUTO)
     app = QtWidgets.QApplication([])
     widget = src.main_window.MainWindow()
     widget.show()
