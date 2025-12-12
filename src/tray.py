@@ -47,7 +47,8 @@ class Tray(QtWidgets.QSystemTrayIcon):
         self.menu.addAction(self.quit_action)
         self.setContextMenu(self.menu)
 
-    def show_main_window(self):
+    @staticmethod
+    def show_main_window():
         """
         显示主界面
         """
@@ -69,7 +70,8 @@ class Tray(QtWidgets.QSystemTrayIcon):
             MainWindow.instance.raise_()
             MainWindow.instance.activateWindow()
 
-    def show_settings(self):
+    @staticmethod
+    def show_settings():
         """
         显示设置页面
         """

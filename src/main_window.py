@@ -476,7 +476,8 @@ class MainWindow(fluent.MSFluentWindow):
         self.addSubInterface(self.pages[0], self.pages[0].icon, "个人抽选")
         self.addSubInterface(self.pages[1], self.pages[1].icon, "小组抽选")
 
-    def closeEvent(self, event):
+    @staticmethod
+    def closeEvent(event):
         MainWindow.instance = None
         logger.info("已关闭主窗口")
         event.accept()

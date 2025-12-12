@@ -9,11 +9,16 @@ from qfluentwidgets import (
 import src.main_window
 import src.packed_bar
 import src.tray
-
-setTheme(Theme.AUTO)
-setThemeColor("#FFC107")
+import src.version_manager
 
 def init():
+    temp = src.version_manager.init()
+    if temp["state-code"] == -1:
+        pass
+    
+    setTheme(Theme.AUTO)
+    setThemeColor("#FFC107")
+    
     app = QtWidgets.QApplication([])
     app.setQuitOnLastWindowClosed(False)
     main_window = src.main_window.MainWindow()

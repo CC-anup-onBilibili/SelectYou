@@ -60,5 +60,20 @@ class GuideWindow(QtWidgets.QWidget):
         self.main_layout.addLayout(self.button_layout)
         self.setLayout(self.main_layout)
     
-    def next(self): ...
-    def back(self): ...
+    def next(self):
+        """按下下一步按钮所执行的操作"""
+        self.current_page_index += 1
+        if self.current_page_index > 0:
+            self.back_button.setEnabled(True)
+        if self.current_page_index == len(self.pages)-1:
+            self.next_button.setText("完成！")
+        ...
+    
+    def back(self):
+        """按下上一步按钮做执行的操作"""
+        self.current_page_index -= 1
+        if self.current_page_index == 0:
+            self.back_button.setEnabled(False)
+        if self.current_page_index < len(self.pages)-1:
+            self.next_button.setText("下一步")
+        ...

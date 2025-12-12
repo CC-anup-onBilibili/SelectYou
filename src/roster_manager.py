@@ -108,7 +108,8 @@ class Roster:
             logger.warning(f"未找到学生：{param[1]}")
         except TypeError as e:
             logger.error(f"{e}")
-
+    
+    # TODO: ？？这段怎么写来着我回头再看
     def set_group(self, student: Student, group: str):
         """
         设置学生分组
@@ -483,12 +484,13 @@ class Roster:
             logger.error(f"{e}")
             return e
         # TODO: 逻辑改掉
-
+    
     def random_group_slicer(self, quant: int, group_names: list[str]):
         if quant > len(group_names):
             raise ValueError(f"指定的抽取组数：{quant} 超过了所期望的小组数：{len(group_names)}")
         groups: dict[str, list[Student]] = {}
-
+        # TODO: 等会儿这个还没写完
+        
     # TODO: 差一个数据持久化
 
 # TODO: 接下来创建花名册，并让其他模块导入该模块
