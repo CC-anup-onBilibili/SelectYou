@@ -254,45 +254,6 @@ class Roster:
         self.weight_updater_mode = mode
         logger.info(f"已设置权重更新模式：{mode}")
 
-    # def _fair_predictable_updater(self):
-    #     """
-    #     公平地、可预测地更新权重
-    #     :return: 无返回值
-    #     """
-    #     all_selected_times = map(lambda s: float(s.selected_times), self.students)
-    #     average_selected_times = sum(all_selected_times) / float(len(self.students))
-    #     logger.info(f"平均抽选次数更新完成：{average_selected_times}")
-    #     for student in self.students:
-    #         student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0
-    #         logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
-    #     logger.info("权重更新完成")
-    #
-    # def _fair_unpredicted_updater(self):
-    #     """
-    #     公平地、不可预测地更新权重
-    #     :return: 无返回值
-    #     """
-    #     all_selected_times = map(lambda s: float(s.selected_times), self.students)
-    #     average_selected_times = sum(all_selected_times) / float(len(self.students))
-    #     logger.info(f"平均抽选次数更新完成：{average_selected_times}")
-    #     for student in self.students:
-    #         student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0 + random.randint(0, 10)
-    #         logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
-    #     logger.info("权重更新完成")
-    #
-    # def _unfair_predictable_updater(self):
-    #     """
-    #     非公平地、可预测地更新权重
-    #     :return: 无返回值
-    #     """
-    #     all_selected_times = map(lambda s: float(s.selected_times), self.students)
-    #     average_selected_times = sum(all_selected_times) / float(len(self.students))
-    #     logger.info(f"平均抽选次数更新完成：{average_selected_times}")
-    #     for student in self.students:
-    #         student.weight = abs(float(student.selected_times) - average_selected_times) * 3.0 + student.custom_weight
-    #         logger.info(f"已更新Student：{student.name} 权重为：{student.weight}")
-    #     logger.info("权重更新完成")
-
     def _unfair_unpredicted_updater(self):
         """
         非公平地、不可预测地更新权重
@@ -490,7 +451,12 @@ class Roster:
             raise ValueError(f"指定的抽取组数：{quant} 超过了所期望的小组数：{len(group_names)}")
         groups: dict[str, list[Student]] = {}
         # TODO: 等会儿这个还没写完
-        
+    
+    def random_sort(self):
+        """对学生列表进行随机排序"""
+        temp = self.students
+        random.shuffle(temp)
+        return temp
     # TODO: 差一个数据持久化
 
 # TODO: 接下来创建花名册，并让其他模块导入该模块

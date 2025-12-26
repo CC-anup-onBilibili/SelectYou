@@ -15,7 +15,12 @@ def check_version_format(version_code: str):
 def check_update(version_code: str) -> str | None:
     """检查更新"""
     # TODO: 自动获取最新版本元数据
-    def get_latest_version() -> dict[str, str]: ...
+    def get_latest_version() -> dict[str, str]:
+        return {
+            "version": "1.0.0.0",
+            "codename": "Elaine",
+            "state": "dev"
+        }
     
     this_version_code = version_code.split('.')
     latest_version = get_latest_version()["version"]

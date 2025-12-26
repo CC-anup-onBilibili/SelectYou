@@ -6,15 +6,15 @@ from qfluentwidgets import (
     setTheme, Theme,
     setThemeColor
 )
+import src.version_manager
 import src.main_window
 import src.packed_bar
 import src.tray
-import src.version_manager
 
 def init():
-    temp = src.version_manager.init()
-    if temp["state-code"] == -1:
-        pass
+    # temp = src.version_manager.init()
+    # if temp["state-code"] == -1:
+    #     pass
     
     setTheme(Theme.AUTO)
     setThemeColor("#FFC107")

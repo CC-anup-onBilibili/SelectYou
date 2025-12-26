@@ -2,6 +2,7 @@
 import bcrypt
 from PySide6 import QtWidgets, QtGui, QtCore
 import qfluentwidgets as fluent
+from qfluentwidgets import FluentIcon
 
 hashed = ""
 
@@ -91,10 +92,93 @@ def set_password(password: str):
     logger.debug("密码设置成功")
     load_hashed()
 
+def scan_udisk():
+    """扫描U盘"""
+    usb_info_list = []
+    system = platform.system()
+    
+    # 1. Windows 系统：读取磁盘信息（卷标、序列号、盘符）
+    if system == "Windows":
+        import win32api
+        import win32file
+        import win32con
+        
+        # 遍历所有逻辑磁盘
+        drives = win32api.GetLogicalDriveStrings().split('\000')[:-1]
+        for drive in drives:
+            # 判断是否为可移动磁盘（U 盘）
+            if win32file.GetDriveType(drive) == win32con.DRIVE_REMOVABLE:
+                try:
+                    # 获取卷标
+                    volume_name = win32api.GetVolumeInformation(drive)[0]
+                    # 获取硬件序列号（需管理员权限）
+                    serial_number = win32api.GetVolumeInformation(drive)[1]
+                    # 拼接 U 盘信息
+                    usb_info = {
+                        "drive": drive,          # 盘符（如 D:\）
+                        "volume_name": volume_name,  # 卷标
+                        "serial_number": serial_number,  # 序列号
+                        "type": "USB Drive"
+                    }
+                    usb_info_list.append(usb_info)
+                except Exception as e:
+                    continue
+    
+    # 2. macOS/Linux 系统：读取挂载的 U 盘信息
+    elif system in ["Darwin", "Linux"]:
+        # 遍历挂载点
+        for part in psutil.disk_partitions():
+            # 筛选可移动存储（U 盘）
+            if 'removable' in part.opts or 'usb' in part.device.lower():
+                try:
+                    # 获取卷标（macOS/Linux 需解析挂载信息）
+                    volume_name = os.path.basename(part.mountpoint)
+                    # 获取设备路径（如 /dev/sdb1）
+                    device_path = part.device
+                    # 读取 USB 设备 VID/PID（通过 pyusb）
+                    dev = usb.core.find(find_all=True)
+                    vid_pid_list = []
+                    for d in dev:
+                        vid_pid_list.append({
+                            "vid": hex(d.idVendor),
+                            "pid": hex(d.idProduct)
+                        })
+                    # 拼接信息
+                    usb_info = {
+                        "mount_point": part.mountpoint,  # 挂载点
+                        "volume_name": volume_name,
+                        "device_path": device_path,
+                        "vid_pid": vid_pid_list,
+                        "type": "USB Drive"
+                    }
+                    usb_info_list.append(usb_info)
+                except Exception as e:
+                    continue
+    
+    # 3. 补充 USB 设备 VID/PID（全平台）
+    try:
+        devs = usb.core.find(find_all=True)
+        usb_vid_pid = []
+        for d in devs:
+            usb_vid_pid.append({
+                "vendor": usb.util.get_string(d, d.iManufacturer),  # 厂商名
+                "product": usb.util.get_string(d, d.iProduct),      # 产品名
+                "vid": hex(d.idVendor),                             # 厂商ID
+                "pid": hex(d.idProduct)                             # 产品ID
+            })
+        for usb_info in usb_info_list:
+            usb_info["usb_vid_pid"] = usb_vid_pid
+    except Exception as e:
+        print(f"读取 VID/PID 失败：{e}")
+    
+    return usb_info_list
+
 class PasswordCheckerDialog(fluent.MessageBoxBase):
     """密码验证对话框"""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent = None):
+        super().__init__(parent =  parent)
+        
+        self.setModal(True)
         
         self.main_layout = QtWidgets.QVBoxLayout()
         
@@ -107,7 +191,56 @@ class PasswordCheckerDialog(fluent.MessageBoxBase):
         self.checker_label.setText("验证方式：")
         
         self.combo = fluent.ComboBox()
-        # TODO: 根据设定的验证方式，自动补充验证方式下拉菜单
+        self.combo.addItem("密码验证")
+        self.combo.addItem("U盘验证")
+        
+        self.checker_layout.addWidget(self.checker_label)
+        self.checker_layout.addWidget(self.combo)
+        
+        self.password_layout = QtWidgets.QHBoxLayout()
+        
+        self.password_input = fluent.PasswordLineEdit()
+        self.password_input.setPlaceholderText("请输入密码")
+        
+        self.password_layout.addWidget(self.password_input)
+        
+        self.udisk_layout = QtWidgets.QHBoxLayout()
+        
+        self.udisk_label = fluent.BodyLabel()
+        self.udisk_label.setText("请插入U盘或点击按钮检测……")
+        
+        self.udisk_button = fluent.TransparentPushButton()
+        self.udisk_button.setText("检测")
+        self.udisk_button.setIcon(FluentIcon.SEARCH)
+        
+        self.udisk_layout.addWidget(self.udisk_label)
+        self.udisk_layout.addWidget(self.udisk_button)
+        
+        self.main_layout.addWidget(self.title)
+        self.main_layout.addLayout(self.checker_layout)
+        self.main_layout.addLayout(self.password_layout)
+        self.setLayout(self.main_layout)
+        
+    def validate(self) -> bool:
+        """验证"""
+        if self.combo.currentText() == "密码验证":
+            if check_pwd(self.password_input.text()):
+                return True
+            else:
+                self.password_input.clear()
+                fluent.InfoBar.error(
+                    title = "密码错误",
+                    content = "请重新输入",
+                    isClosable = True,
+                    position = fluent.InfoBarPosition.TOP,
+                    duration = 3000,
+                    parent = self
+                )
+                return False
+        elif self.combo.currentText() == "U盘验证":
+            ...
+            # TODO: 添加U盘验证方式
+
 
 def need_password(func):
     """装饰器，被装饰后会调用密码验证"""

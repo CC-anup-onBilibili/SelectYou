@@ -4,3 +4,4 @@ pyjson >= 1.4.1
 loguru >= 0.7.3
 pyside6 >= 6.10.1
 bcrypt >= 5.0.0
+pywin32 >= 310

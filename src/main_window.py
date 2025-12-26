@@ -459,6 +459,35 @@ class GroupSelectionPage(QtWidgets.QWidget):
         
         start_animation()
 
+class RandomSortPage(QtWidgets.QWidget):
+    """随机排序页面"""
+    def __init__(self):
+        super().__init__()
+        
+        self.ind = 0
+        
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.current_layout = QtWidgets.QVBoxLayout()
+        self.button_layout = QtWidgets.QHBoxLayout()
+        
+        self.font_now = QtGui.QFont()
+        self.font_now.setBold(True)
+        self.font_now.setPointSize(64)
+        self.font_now.setFamilies("Microsoft Yahei UI")
+        
+        self.label_now = QtWidgets.QLabel()
+        self.current_layout.addWidget(self.label_now)
+        self.current_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        
+        self.next_button = fluent.PrimaryPushButton()
+        self.next_button.setText("开始")
+        self.button_layout.addWidget(self.next_button)
+        
+        self.main_layout.addLayout(self.current_layout)
+        self.main_layout.addLayout(self.button_layout)
+        self.setLayout(self.main_layout)
+        
+
 class MainWindow(fluent.MSFluentWindow):
 
     instance = None
@@ -471,13 +500,13 @@ class MainWindow(fluent.MSFluentWindow):
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
         self.pages = [PersonSelectionPage(), GroupSelectionPage()]
         self.addSubInterface(self.pages[0], self.pages[0].icon, "个人抽选")
         self.addSubInterface(self.pages[1], self.pages[1].icon, "小组抽选")
-
-    @staticmethod
-    def closeEvent(event):
+    
+    def closeEvent(self, event):
         MainWindow.instance = None
         logger.info("已关闭主窗口")
         event.accept()

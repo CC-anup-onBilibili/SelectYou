@@ -32,6 +32,7 @@ About 关于软件:
 import qfluentwidgets as fluent
 from qfluentwidgets.common import icon
 from PySide6 import QtWidgets, QtGui, QtCore
+from loguru import logger
 
 class SettingGroup(fluent.QConfig):
     """设置项们"""
@@ -126,6 +127,11 @@ class SettingsWindow(fluent.FluentWindow):
             icon.FluentIcon.APPLICATION,
             "基础设置"
         )
+    
+    def closeEvent(self, event):
+        SettingsWindow.instance = None
+        logger.info("已关闭设置窗口")
+        event.accept()
 
     @classmethod
     def get_instance(cls, parent = None):
