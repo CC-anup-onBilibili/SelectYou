@@ -35,7 +35,7 @@ def check_update(version_code: str) -> str | None:
 def init() -> dict[str, int | str]:
     """初始化版本元数据和图标"""
     global version_metadata, icon_path
-    with open("../data/settings/version_metadata.json", "r", encoding = "utf-8") as f:
+    with open("data/settings/version_metadata.json", "r", encoding = "utf-8") as f:
         version_metadata = json.load(f)
     icon_path = f"../resources/icon/{version_metadata["state"]}.png"
     # TODO: 添加更多版本相关初始化功能

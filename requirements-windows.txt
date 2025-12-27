@@ -5,3 +5,4 @@ loguru >= 0.7.3
 pyside6 >= 6.10.1
 bcrypt >= 5.0.0
 pywin32 >= 310
+PyQt-Fluent-Widgets >= 1.10.5
